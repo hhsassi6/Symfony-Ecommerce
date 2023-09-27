@@ -27,7 +27,7 @@ class Products
     #[ORM\Column]
     private ?int $stock = null;
 
-    #[ORM\Column]
+    #[ORM\Column(options: ['default' => 'CURRENT_TIMESTAMP'])]
     private ?\DateTimeImmutable $created_at = null;
 
     #[ORM\ManyToOne(inversedBy: 'products')]
@@ -37,9 +37,13 @@ class Products
     #[ORM\OneToMany(mappedBy: 'products', targetEntity: Image::class, orphanRemoval: true)]
     private Collection $images;
 
+    #[ORM\OneToMany(mappedBy: 'products', targetEntity: OrdersDetails::class)]
+    private Collection $ordersDetails;
+
     public function __construct()
     {
         $this->images = new ArrayCollection();
+        $this->ordersDetails = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -143,6 +147,36 @@ class Products
             // set the owning side to null (unless already changed)
             if ($image->getProducts() === $this) {
                 $image->setProducts(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, OrdersDetails>
+     */
+    public function getOrdersDetails(): Collection
+    {
+        return $this->ordersDetails;
+    }
+
+    public function addOrdersDetail(OrdersDetails $ordersDetail): static
+    {
+        if (!$this->ordersDetails->contains($ordersDetail)) {
+            $this->ordersDetails->add($ordersDetail);
+            $ordersDetail->setProducts($this);
+        }
+
+        return $this;
+    }
+
+    public function removeOrdersDetail(OrdersDetails $ordersDetail): static
+    {
+        if ($this->ordersDetails->removeElement($ordersDetail)) {
+            // set the owning side to null (unless already changed)
+            if ($ordersDetail->getProducts() === $this) {
+                $ordersDetail->setProducts(null);
             }
         }
 
